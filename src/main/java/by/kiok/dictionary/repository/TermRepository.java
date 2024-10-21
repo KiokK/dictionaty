@@ -8,11 +8,11 @@ import java.util.List;
 
 public interface TermRepository extends JpaRepository<Term, Long> {
 
-    List<Term> findByWord_RussianStartsWith(String russianWord);
+    List<Term> findByWord_RussianStartsWithOrderByWord_Russian(String russianWord, Pageable pageable);
 
-    List<Term> findByWord_ChinaStartsWith(String chinaWord);
+    List<Term> findByWord_ChinaStartsWithOrderByWord_China(String chinaWord, Pageable pageable);
 
-    List<Term> findByWord_EnglishStartsWith(String englishWord);
+    List<Term> findByWord_EnglishStartsWithOrderByWord_English(String englishWord, Pageable pageable);
 
     List<Term> findByChapter_Id(Long chapterId, Pageable pageable);
 

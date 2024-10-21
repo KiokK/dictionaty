@@ -1,10 +1,6 @@
 package by.kiok.dictionary.model;
 
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,6 +23,6 @@ public class Chapter extends BaseEntity {
     private Word theme;
 
     @OrderBy("word.english DESC")
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "chapter")
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, mappedBy = "chapter")
     private List<Term> terms;
 }

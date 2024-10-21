@@ -1,4 +1,4 @@
-package by.kiok.dictionary.dto.response;
+package by.kiok.dictionary.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TermResponse {
+public class TermRequest {
 
-    public Long id;
     public String china;
     public String english;
     public String russian;
