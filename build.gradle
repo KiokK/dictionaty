@@ -3,6 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.4.0-SNAPSHOT'
 	id 'io.spring.dependency-management' version '1.1.6'
 	id 'io.freefair.lombok' version '8.4'
+	id 'com.avast.gradle.docker-compose' version "0.17.10"
 }
 
 group = 'by.kiok'
@@ -10,7 +11,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
 
@@ -42,4 +43,11 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+dockerCompose {
+	localstack {
+		useComposeFiles = ["${rootDir}/docker-compose.yml"]
+		startedServices = ['localstack']
+	}
 }
