@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  db:
+    container_name: "db"
+    image: "postgres:14.0-alpine"
+    restart: always
+    build:
+      context: ./
+#      dockerfile: DockerfilePg
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dictionary
+    ports:
+      - "5432:5432"
+#    command: --init-file /data/application/init.sql
+    volumes:
+      - ./data/init.sql:/data/application/init.sql
+
+  pgadmin:
+    container_name: "pgadmin_cont"
+    image: dpage/pgadmin4:7.2
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "habrpguser@habr.com"
+      PGADMIN_DEFAULT_PASSWORD: "pgadminpwd4habr"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+
+  app:
+    container_name: "SpringDictionary"
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/dictionary
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    depends_on:
+      - db
+    ports:
+      - 8082:8082
+    command: /home/gradle/buildWorkspace/app/build/distributions/app/bin/app
