@@ -1,107 +1,128 @@
-import React, { useState, useEffect } from 'react';
-import { getMessages, findWordsByPartAndLang } from '../service/QuerySenderService';
+import React, {useState, useEffect} from 'react';
+import {getMessages, findWordsByPartAndLang} from '../service/QuerySenderService';
 
-import { FormattedMessage } from 'react-intl'
+import {FormattedMessage} from 'react-intl'
+import Header from "./Header";
+import {Link, replace, useNavigate, useParams, useSearchParams} from "react-router-dom";
 
 const WordComponent = () => {
+    const navigate = useNavigate();
+    const props = useParams();
+    const [params, setParams] = useSearchParams();
     const [termPage, setTermPage] = useState([]);
     const [chapters, setChapters] = useState([]);
     const [findWord, setFindWord] = useState('');
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [page, setPage] = useState((params.get("page")) ? params.get("page") : 0);
     const [count, setCount] = useState(6);
-    // const [page, setPage] = useState(0);
-    const [pageSize, setPageSize] = useState(15);
+    const [pageSize, setPageSize] = useState((params.get("size") !== null) ? params.get("size") : 15);
+    const [chapterId, setChapterId] = useState((props.chapterId) ? props.chapterId : 0);
 
     const getOffset = () => {
-        return pageSize * currentIndex;
+        return pageSize * page;
     }
 
     const getWordNumber = (index) => {
+        // console.log("params="+params.get("page"))
         return index + 1 + getOffset();
     }
 
     useEffect(() => {
-        fetchMessages(currentIndex);
+        handleFindWordByChapter(chapterId)
     }, []);
 
-    const fetchMessages = async (i) => {
+    const handleFindWordByChapter = async (chapterId) => {
         try {
-            setCurrentIndex(i)
-            const messagesData = await getMessages(`terms?page=${i}&size=${pageSize}`);
+            const lang = document.getElementById('selectLang').value;
+
+            const chapterResponse = await findWordsByPartAndLang(`chapters/${chapterId}/terms?page=${page}&size=${pageSize}`);
+
             const chaptersData = await getMessages("chapters");
-          //  const data = [new Word(1,"one") //     new Word(2,"test"),new Word(3,"data in code")];  //  console.log(data)
-            setTermPage(messagesData);
             setChapters(chaptersData);
-            setCount(Math.ceil((messagesData.totalElements / pageSize)))
-        } catch (error) {
-            console.error('Failed to fetch terms', error);
-        }
-    };
-
-    const handleFindWordByChapter = async (e) => {
-     //   e.preventDefault()
-        try {
-            const chapterId = document.getElementById('selectChapter').value;
-
-            const chapterResponse = await findWordsByPartAndLang(`chapters/${chapterId}/terms?page=${currentIndex}&size=${pageSize}`);
-            console.log(`chapters/${chapterId}/terms?page=${currentIndex}&size=${pageSize}`)
-            // fetchMessages();
-            console.log(chapterResponse?.termPage.terms?.length)
             setTermPage((chapterResponse.termPage?.terms?.length !== 0) ? chapterResponse.termPage : []);
             setCount(Math.ceil((chapterResponse.termPage.totalElements / pageSize)))
         } catch (error) {
-            console.error('Failed to find words by', error);
+            console.error('Failed handleFindWordByChapter', error);
+            setTermPage([]);
+        }
+    }
+    const handleFindWordByChapter2 = async (e) => {
+        e.preventDefault()
+        try {
+            setChapterId(document.getElementById('selectChapter').value)
+            setPage(0)
+            const chapterResponse = await findWordsByPartAndLang(`chapters/${
+                document.getElementById('selectChapter').value
+            }/terms?page=${page}&size=${pageSize}`);
+
+            const chaptersData = await getMessages("chapters");
+            setChapters(chaptersData);
+            setTermPage((chapterResponse.termPage?.terms?.length !== 0) ? chapterResponse.termPage : []);
+            setCount(Math.ceil((chapterResponse.termPage.totalElements / pageSize)))
+        } catch (error) {
+            console.error('Failed handleFindWordByChapter2', error);
             setTermPage([]);
         }
     }
 
     const handleFindWord = async (e) => {
-        e.preventDefault()
         try {
             const lang = document.getElementById('selectLang').value;
-            const data = await findWordsByPartAndLang(`terms/find?part=${findWord}&lang=${lang}`, {});
+            setParams({part: findWord, lang: lang, page: page, size: pageSize});
+            const data = await findWordsByPartAndLang(`terms/find?part=${findWord}&lang=${lang}&page=${page}&size=${pageSize}`, {});
 
-           // fetchMessages();
             setTermPage(data);
             setCount(Math.ceil((data.totalElements / pageSize)))
-           // setNewMessage('');
         } catch (error) {
-            console.error('Failed to find words by', error);
+            console.error('Failed handleFindWord', error);
             setTermPage([]);
         }
     };
 
-    const  goToNextPage = async (e, i) => {
-        e.preventDefault()
+    const goToNextPage = async (e, page) => {
         try {
-            await fetchMessages(i);
-            setCurrentIndex(i)
+            setChapterId(document.getElementById('selectChapter').value)
+            setPage(page)
+            const chapterResponse = await findWordsByPartAndLang(`chapters/${chapterId}/terms?page=${page}&size=${pageSize}`);
+
+            // console.log(`chapters/${chapterId}/terms?page=${page}&size=${pageSize}`);
+            const chaptersData = await getMessages("chapters");
+            setChapters(chaptersData);
+            setTermPage((chapterResponse.termPage?.terms?.length !== 0) ? chapterResponse.termPage : []);
+            setCount(Math.ceil((chapterResponse.termPage.totalElements / pageSize)))
+
         } catch (error) {
-            console.error('Failed to find words by', error);
+            console.error('Failed goToNextPage by', error);
+            setTermPage([]);
         }
     }
 
     return (
         <div>
+            <Header/>
             <div className="App">
                 {/*<h1>Заголовок</h1>*/}
                 <br/>
                 <form>
                     <label htmlFor="chapter"><FormattedMessage id='find_words_by_chapter'/>: </label>
-                    <select id="selectChapter" name="chapter"  className="custom-select  m-2" style={{width:'200px'}}>
+                    <select id="selectChapter" name="chapter" className="custom-select m-2" style={{width: '200px'}}>
                         <option disabled>Выбрать</option>
                         {chapters?.map((chapter) => (
-                            <option value={chapter.id} key={chapter.id}>
-                                {chapter.english} - {chapter.russian} - {chapter.china}
-                            </option>
+                            (chapter.id == props.chapterId) ?
+                                <option value={chapter.id} key={chapter.id}
+                                        selected="true"> {chapter.english} - {chapter.russian} - {chapter.china} </option> :
+
+                                <option value={chapter.id}
+                                        key={chapter.id}> {chapter.english} - {chapter.russian} - {chapter.china} </option>
                         ))}
                     </select>
-                    <button type="button" className="btn btn-success" onClick={handleFindWordByChapter}><FormattedMessage id='find_words'/></button>
+                    <button type="button" className="btn btn-success" onClick={handleFindWordByChapter2}>
+                        <FormattedMessage id='find_words'/>
+                    </button>
                 </form>
                 <br/>
                 <form>
                     <label htmlFor="language"><FormattedMessage id='find_words_by_part'/>: </label>
-                    <select id="selectLang" name="lang" className="custom-select m-2" style={{width:'200px'}}>
+                    <select id="selectLang" name="lang" className="custom-select m-2" style={{width: '200px'}}>
                         <option disabled><FormattedMessage id='select'/></option>
                         <option value="ru"><FormattedMessage id='russian'/></option>
                         <option value="en"><FormattedMessage id='english'/></option>
@@ -112,7 +133,8 @@ const WordComponent = () => {
                         onChange={(e) => setFindWord(e.target.value)}
                         placeholder="..."
                     />
-                    <button type="button" className="btn btn-success  m-2" onClick={handleFindWord}><FormattedMessage id='find_words'/></button>
+                    <button type="button" className="btn btn-success m-2" onClick={handleFindWord}><FormattedMessage
+                        id='find_words'/></button>
                 </form>
             </div>
             <br/>
@@ -121,53 +143,85 @@ const WordComponent = () => {
                     <thead>
                     <tr>
                         <th scope="col">#</th>
+                        {(document?.getElementById('selectLang') === null || document?.getElementById('selectLang')?.value === 'ru') ? <>
+                                <th scope="col">
+                                    <div className='text-center'><FormattedMessage id='russian'/></div>
+                                </th>
+                                <th scope="col">
+                                    <div className='text-center'><FormattedMessage id='english'/></div>
+                                </th>
+                                <th scope="col">
+                                    <div className='text-center'><FormattedMessage id='china'/></div>
+                                </th>
+                            </> :
+                            (document.getElementById('selectLang').value === 'en') ? <>
+                                    <th scope="col">
+                                        <div className='text-center'><FormattedMessage id='english'/></div>
+                                    </th>
+                                    <th scope="col">
+                                        <div className='text-center'><FormattedMessage id='russian'/></div>
+                                    </th>
+                                    <th scope="col">
+                                        <div className='text-center'><FormattedMessage id='china'/></div>
+                                    </th>
+                                </> :
+                                <>
+                                    <th scope="col">
+                                        <div className='text-center'><FormattedMessage id='china'/></div>
+                                    </th>
+                                    <th scope="col">
+                                        <div className='text-center'><FormattedMessage id='russian'/></div>
+                                    </th>
+                                    <th scope="col">
+                                        <div className='text-center'><FormattedMessage id='english'/></div>
+                                    </th>
+                                </>
+                        }
                         <th scope="col">
-                            <div className='text-center'>
-                                <FormattedMessage id='russian'/>
-                            </div>
+                            <div className='text-center'><FormattedMessage id='transcription'/></div>
                         </th>
-                        <th scope="col">
-                            <div className='text-center'>
-                                <FormattedMessage id='english'/>
-                            </div>
-                        </th>
-                        <th scope="col">
-                            <div className='text-center'>
-                                <FormattedMessage id='china'/>
-                            </div>
-                        </th>
-                        <th scope="col">
-                            <div className='text-center'>
-                                <FormattedMessage id='transcription'/>
-                            </div>
-                        </th>
+
                     </tr>
                     </thead>
                     <tbody>
                     {termPage?.terms?.map((term, index) => (
-                        <tr key={"table_"+term.id} >
+                        <tr key={"table_" + term.id}>
                             <th scope="row" width='3%'>{getWordNumber(index)}.</th>
-                            <td className='text-center'>{term.russian}</td>
-                            <td className='text-center'>{term.english}</td>
-                            <td className='text-center'>{term.china}</td>
+                            {(document?.getElementById('selectLang')?.value === 'ru') ? <>
+                                    <td className='text-center'>{term.russian}</td>
+                                    <td className='text-center'>{term.english}</td>
+                                    <td className='text-center'>{term.china}</td>
+                                </> :
+                                (document.getElementById('selectLang').value === 'en') ?
+                                    <>
+                                        <td className='text-center'>{term.english}</td>
+                                        <td className='text-center'>{term.russian}</td>
+                                        <td className='text-center'>{term.china}</td>
+                                    </> : <>
+                                        <td className='text-center'>{term.china}</td>
+                                        <td className='text-center'>{term.russian}</td>
+                                        <td className='text-center'>{term.english}</td>
+                                    </>
+                            }
                             <td className='text-center'>[{term.transcription}]</td>
                         </tr>
                     ))}
-
                     </tbody>
                 </table>
-                {(termPage?.length === 0) ? <FormattedMessage id='nothing_find'/> : "" }
+                {(termPage?.length === 0) ? <FormattedMessage id='nothing_find'/> : ""}
                 <nav aria-label="Page navigation example">
                     <ul className="pagination justify-content-center">
                         <li className="page-item  list-group-item disabled">
                             <a className="text-success" href="#" tabIndex="-1"> <FormattedMessage id='previous'/></a>
                         </li>
                         {[...Array(count)].map((e, i) => (
-                            <li className={"list-group-item page-item " + (i === currentIndex ? "bg-light" : "")}
-                                onClick={(elem) => {goToNextPage(elem, i).then(setCurrentIndex(i))}}
-                                key={"pageIndex_"+i}
-                            ><a className="text-success" href="#">{i + 1}</a></li>))
-                        }
+                            <li className={"list-group-item page-item text-success " + (i === page ? "bg-light" : "")}
+                                onClick={(elem) => {
+                                    goToNextPage(elem, i)
+                                }}
+                                key={"pageIndex_" + i}
+                            >{i + 1}</li>
+                        ))}
                         <li className="page-item list-group-item disabled">
                             <a className="text-success" href="#"> <FormattedMessage id='next'/></a>
                         </li>

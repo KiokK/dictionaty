@@ -3,6 +3,7 @@ import { loginAPICall, setAuthHeader } from '../service/Authservice';
 import {useNavigate} from 'react-router-dom'
 
 import { FormattedMessage } from 'react-intl'
+import Header from "./Header";
 
 const LoginComponent = () => {
 
@@ -14,21 +15,24 @@ const LoginComponent = () => {
         e.preventDefault();
 
         loginAPICall(username, password).then((response) => {
-             console.log(response.data);
+            // console.log(response.data);
             setAuthHeader(response.data.token, response.data.role);
 
             if (response.data.role !== "ADMIN" && response.data.role !== "EDITOR") {
-                alert("Ваш профиль не подтвержден - свяжитесь с администратором!");
+                alert("Profile is not active - connect to admin!");
                 return;
             }
             navigate(`/editor`);
+            window.location.reload()
         }).catch(error => {
             alert("Неверный логи или пароль!");
             console.error(error);
         })
     }
 
-    return (
+    return (<>
+        <Header/>
+
         <div className='container'>
             <br /> <br />
             <div className='row'>
@@ -71,6 +75,7 @@ const LoginComponent = () => {
                 </div>
             </div>
         </div>
+        </>
     )
 }
 

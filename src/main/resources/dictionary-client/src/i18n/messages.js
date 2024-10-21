@@ -4,6 +4,7 @@ export const messages = {
     [LOCALES.ENGLISH]: {
         title: `Russian-chinese-english dictionary of technical terms`,
         sign_in: 'Sign in',
+        sign_out: "Sign out",
         find_words_by_part: "Find words by part",
         find_words_by_chapter: "Find words by chapter",
         find_words: "Find words",
@@ -20,6 +21,12 @@ export const messages = {
         password: "Password",
         login: "Login",
         enter: "Enter",
+        users: "Users",
+        editor: "Edit",
+        creare_or_reduct_chapter: "Create/Redact chapter",
+        creare_or_reduct_term: "Create/Redact term",
+        editor_mode: "Editor mode",
+        download: "Download",
         // меню
         home: 'Home',
         about_project: 'About the project',
@@ -28,6 +35,7 @@ export const messages = {
     [LOCALES.RUSSIAN]: {
         title: 'Русско-китайско-английский словарь технических терминов',
         sign_in: 'Вход',
+        sign_out: "Выход",
         find_words_by_part: "Поиск слова",
         find_words_by_chapter: "Поиск по разделу",
         find_words: "Найти слова",
@@ -44,6 +52,12 @@ export const messages = {
         password: "Пароль",
         login: "Логин",
         enter: "Войти",
+        editor: "Редактирование",
+        users: "Пользователи",
+        creare_or_reduct_chapter: "Создать или изменить Раздел",
+        creare_or_reduct_term: "Создать или изменить термин",
+        editor_mode: "Изменение данных",
+        download: "Скачать",
         // меню
         home: 'Главная',
         about_project: 'О проекте',

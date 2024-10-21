@@ -10,6 +10,8 @@ export const getAuthToken = () => {
 };
 
 export const getUserRole = () => {
+
+   // console.log(window.localStorage.getItem('user_role'))
     return window.localStorage.getItem('user_role');
 };
 
